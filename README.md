@@ -2,7 +2,7 @@
 
 **PROPOSED blockchain protocol for crosschain transactions**
 
-[Whitepaper](/whitepaper/atlys_whitepaper.md)
+[Whitepaper](/docs/README.md)
 
 ATLYS is a revolutionary cross-chain protocol that seamlessly connects multiple blockchain networks, enabling secure and efficient inter-blockchain transactions. Built on a foundation of advanced cryptographic principles, ATLYS serves as a universal bridge that allows assets and data to flow freely between different blockchain ecosystems while maintaining the highest levels of security and decentralization. 
 
