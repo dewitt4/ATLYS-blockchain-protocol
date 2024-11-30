@@ -345,6 +345,8 @@ ATLYS represents a significant advancement in blockchain interoperability, provi
     <path d="M400 480 L400 520" stroke="#718096" stroke-width="2" stroke-dasharray="5,5"/>
 </svg>
 
+
+
 sequenceDiagram
     participant U as User
     participant B as Bridge
@@ -414,6 +416,8 @@ stateDiagram-v2
         ensures consistency
         across chains
     end note
+
+
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
     <!-- Background -->
