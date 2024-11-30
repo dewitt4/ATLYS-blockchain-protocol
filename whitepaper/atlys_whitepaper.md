@@ -279,6 +279,131 @@ ATLYS represents a significant advancement in blockchain interoperability, provi
 ## Appendix
 
 ### A. Technical Diagrams
+
 ### B. Mathematical Proofs
+B.1 Validator Selection and Reputation Scoring
+The validator selection process uses a weighted probability function that considers both stake amount and reputation score.
+Let $V$ be the set of all validators, where each validator $v_i$ has:
+
+Stake amount: $s_i$
+Reputation score: $r_i \in [0,100]$
+Historical performance: $h_i \in [0,1]$
+
+The selection weight $w_i$ for validator $v_i$ is calculated as:
+$
+w_i = \alpha \cdot \frac{s_i}{\sum_{j \in V} s_j} + \beta \cdot \frac{r_i}{100} + \gamma \cdot h_i
+$
+where:
+
+$\alpha + \beta + \gamma = 1$ (weight coefficients)
+$\alpha = 0.4$ (stake weight)
+$\beta = 0.35$ (reputation weight)
+$\gamma = 0.25$ (historical performance weight)
+
+B.2 Consensus Probability
+The probability of achieving consensus $P(C)$ with $n$ validators and a required threshold $t$ is:
+$
+P(C) = \sum_{k=t}^{n} \binom{n}{k} p^k(1-p)^{n-k}
+$
+where:
+
+$p$ is the probability of an honest validator
+$t = \lceil 2n/3 \rceil$ (threshold for consensus)
+
+B.3 Transaction Fee Model
+The cross-chain transaction fee $F$ is calculated as:
+$
+F = b + \delta \cdot g \cdot c + \epsilon \cdot d
+$
+where:
+
+$b$ is the base fee
+$g$ is the gas price
+$c$ is the computational complexity
+$d$ is the data size
+$\delta$ is the computational cost coefficient
+$\epsilon$ is the data cost coefficient
+
+B.4 Security Threshold Analysis
+For the network to remain secure, the following inequality must hold:
+$
+P(A) < \frac{1}{3}N
+$
+where:
+
+$P(A)$ is the probability of a successful attack
+$N$ is the total number of validators
+
+The probability of a successful attack is:
+$
+P(A) = \prod_{i=1}^{k} (1 - \frac{r_i \cdot s_i}{\sum_{j \in V} s_j})
+$
+where $k$ is the minimum number of validators needed to compromise the network.
+B.5 Reputation Score Updates
+The reputation score update function for validator $v_i$ after transaction $t$ is:
+$
+r_i^{new} = \begin{cases}
+\min(100, r_i^{old} + \alpha_s) & \text{if transaction succeeds} \
+\max(0, r_i^{old} - \alpha_f) & \text{if transaction fails}
+\end{cases}
+$
+where:
+
+$\alpha_s$ is the success reward (typically 1)
+$\alpha_f$ is the failure penalty (typically 5)
+
+B.6 Cross-Chain State Verification
+For a cross-chain state transition to be valid, the following must be satisfied:
+$
+H(S_{t+1}) = H(S_t || T_t || V_t)
+$
+where:
+
+$H$ is the cryptographic hash function
+$S_t$ is the state at time $t$
+$T_t$ is the transaction at time $t$
+$V_t$ is the validation proof
+$||$ denotes concatenation
+
+B.7 Economic Security Model
+The minimum stake requirement $M$ for the network to be economically secure is:
+$
+M > \frac{V_t \cdot R}{\lambda \cdot P_{ATLYS}}
+$
+where:
+
+$V_t$ is the total value secured by the network
+$R$ is the required security ratio (typically 3)
+$\lambda$ is the slashing coefficient
+$P_{ATLYS}$ is the price of ATLYS token
+
+B.8 Transaction Finality Probability
+The probability of transaction finality $P(F)$ after $k$ confirmations is:
+$
+P(F) = 1 - \sum_{i=0}^{\lfloor k/2 \rfloor} \binom{k}{i} q^i(1-q)^{k-i}
+$
+where:
+
+$q$ is the probability of a malicious block
+$k$ is the number of confirmations
+
+B.9 Network Latency Model
+The expected transaction confirmation time $T_c$ is:
+$
+T_c = T_b + T_p + T_v + T_f
+$
+where:
+
+$T_b$ is the base network latency
+$T_p$ is the processing time
+$T_v$ is the validation time
+$T_f$ is the finalization time
+
+Each component follows a probability distribution:
+$
+T_x \sim N(\mu_x, \sigma_x^2)
+$
+where $x$ represents each time component.
+
 ### C. Security Analysis
 ### D. Economic Model Details
