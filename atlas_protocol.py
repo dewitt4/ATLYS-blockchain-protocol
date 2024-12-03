@@ -107,26 +107,26 @@ class CrossChainTransaction:
     receiver: str
     amount: float
     token_symbol: str
+    nonce: int  # Add nonce for replay protection
     timestamp: float = time.time()
     status: str = "pending"
-    signature: Optional[bytes] = None
+    tx_hash: Optional[str] = None
     
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            'source_chain': self.source_chain,
-            'destination_chain': self.destination_chain,
-            'sender': self.sender,
-            'receiver': self.receiver,
-            'amount': self.amount,
-            'token_symbol': self.token_symbol,
-            'timestamp': self.timestamp,
-            'status': self.status
-        }
+    def __post_init__(self):
+        self.tx_hash = self.calculate_hash()
     
     def calculate_hash(self) -> str:
         """Calculate transaction hash"""
-        transaction_string = json.dumps(self.to_dict(), sort_keys=True)
-        return hashlib.sha256(transaction_string.encode()).hexdigest()
+        tx_string = f"{self.source_chain}{self.destination_chain}{self.sender}{self.receiver}{self.amount}{self.token_symbol}{self.nonce}{self.timestamp}"
+        return hashlib.sha256(tx_string.encode()).hexdigest()
+
+def slash_validator(self, validator: ValidatorNode):
+    """Slash a validator for malicious behavior"""
+    validator.slashed = True
+    validator.reputation_score = 0
+    slashed_amount = validator.stake_amount * 0.5  # Slash 50% of stake
+    validator.stake_amount -= slashed_amount
+    return slashed_amount  # Return slashed amount for redistribution
 
 class EnhancedCrossChainBridge:
     """Enhanced bridge for managing cross-chain transactions"""
