@@ -16,55 +16,87 @@ class AtlysToken:
     def get_minimal_unit(self) -> float:
         """Returns the smallest unit of ATLYS token"""
         return 1 / (10 ** self.decimal_places)
-
+    
 class ValidatorNode:
-    """Represents a validator in the Atlys network"""
     def __init__(self, stake_amount: float, public_key: str):
         self.stake_amount = stake_amount
         self.public_key = public_key
-        self.reputation_score = 100  # Starts at 100
+        self.reputation_score = 100
         self.validated_transactions = 0
-        self.last_active = time.time()
-    
+        self.slashed = False
+        self.last_validation_time = 0
+
+    def validate_transaction(self, transaction: 'CrossChainTransaction') -> bool:
+        """Validate a single transaction"""
+        if self.slashed:
+            return False
+        
+        # Basic validation checks
+        try:
+            valid_signature = self.verify_signature(transaction)
+            valid_amount = self.verify_amount(transaction)
+            valid_nonce = self.verify_nonce(transaction)
+            return all([valid_signature, valid_amount, valid_nonce])
+        except Exception:
+            return False
+
     def update_reputation(self, transaction_success: bool):
-        """Update validator reputation based on transaction success"""
+        """Enhanced reputation update with time decay"""
+        current_time = time.time()
+        time_factor = min(1.0, (current_time - self.last_validation_time) / 3600)
+        
         if transaction_success:
-            self.reputation_score = min(100, self.reputation_score + 1)
+            self.reputation_score = min(100, self.reputation_score + (1 * time_factor))
         else:
-            self.reputation_score = max(0, self.reputation_score - 5)
+            self.reputation_score = max(0, self.reputation_score - (5 * time_factor))
+        
+        self.last_validation_time = current_time
         self.validated_transactions += 1
 
 class ConsensusManager:
-    """Manages the consensus mechanism for cross-chain validation"""
     def __init__(self, min_validators: int = 3):
         self.validators: Dict[str, ValidatorNode] = {}
         self.min_validators = min_validators
-        self.consensus_threshold = 0.67  # 67% agreement needed
-        
-    def add_validator(self, validator_id: str, stake_amount: float, public_key: str):
-        """Add a new validator to the network"""
-        self.validators[validator_id] = ValidatorNode(stake_amount, public_key)
-    
+        self.consensus_threshold = 0.67
+        self.slashing_threshold = 3  # Failed validations before slashing
+
     def validate_transaction(self, transaction: 'CrossChainTransaction') -> bool:
-        """Validate a cross-chain transaction through consensus"""
         if len(self.validators) < self.min_validators:
             raise ValueError(f"Insufficient validators. Need at least {self.min_validators}")
+
+        # Select validators based on reputation and stake
+        active_validators = self.get_active_validators()
+        
+        # Collect votes
+        votes = []
+        for validator in active_validators:
+            vote = validator.validate_transaction(transaction)
+            votes.append(vote)
+            validator.update_reputation(vote)
             
-        # Sort validators by reputation and stake
-        active_validators = sorted(
-            self.validators.values(),
+            # Check for slashing conditions
+            if not vote and validator.reputation_score < 20:
+                self.slash_validator(validator)
+
+        # Calculate consensus
+        positive_votes = sum(1 for v in votes if v)
+        consensus_reached = positive_votes / len(votes) >= self.consensus_threshold
+        
+        return consensus_reached
+
+    def slash_validator(self, validator: ValidatorNode):
+        """Slash a validator for malicious behavior"""
+        validator.slashed = True
+        validator.reputation_score = 0
+        # Additional slashing logic (e.g., stake reduction)
+
+    def get_active_validators(self) -> List[ValidatorNode]:
+        """Get active validators sorted by reputation and stake"""
+        return sorted(
+            [v for v in self.validators.values() if not v.slashed],
             key=lambda v: (v.reputation_score, v.stake_amount),
             reverse=True
         )[:self.min_validators]
-        
-        positive_votes = sum(1 for v in active_validators if v.reputation_score > 50)
-        consensus_reached = positive_votes / len(active_validators) >= self.consensus_threshold
-        
-        # Update validator reputations
-        for validator in active_validators:
-            validator.update_reputation(consensus_reached)
-            
-        return consensus_reached
 
 @dataclass
 class CrossChainTransaction:
@@ -75,26 +107,26 @@ class CrossChainTransaction:
     receiver: str
     amount: float
     token_symbol: str
+    nonce: int  # Add nonce for replay protection
     timestamp: float = time.time()
     status: str = "pending"
-    signature: Optional[bytes] = None
+    tx_hash: Optional[str] = None
     
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            'source_chain': self.source_chain,
-            'destination_chain': self.destination_chain,
-            'sender': self.sender,
-            'receiver': self.receiver,
-            'amount': self.amount,
-            'token_symbol': self.token_symbol,
-            'timestamp': self.timestamp,
-            'status': self.status
-        }
+    def __post_init__(self):
+        self.tx_hash = self.calculate_hash()
     
     def calculate_hash(self) -> str:
         """Calculate transaction hash"""
-        transaction_string = json.dumps(self.to_dict(), sort_keys=True)
-        return hashlib.sha256(transaction_string.encode()).hexdigest()
+        tx_string = f"{self.source_chain}{self.destination_chain}{self.sender}{self.receiver}{self.amount}{self.token_symbol}{self.nonce}{self.timestamp}"
+        return hashlib.sha256(tx_string.encode()).hexdigest()
+
+def slash_validator(self, validator: ValidatorNode):
+    """Slash a validator for malicious behavior"""
+    validator.slashed = True
+    validator.reputation_score = 0
+    slashed_amount = validator.stake_amount * 0.5  # Slash 50% of stake
+    validator.stake_amount -= slashed_amount
+    return slashed_amount  # Return slashed amount for redistribution
 
 class EnhancedCrossChainBridge:
     """Enhanced bridge for managing cross-chain transactions"""
