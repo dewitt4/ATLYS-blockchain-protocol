@@ -71,9 +71,3 @@ testpaths = [
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test", "Describe"]
 python_functions = ["test_*", "it_*", "they_*"]
-
-[project.urls]
-"Homepage" = "https://atlys.io"
-"Bug Tracker" = "https://github.com/atlys/atlys/issues"
-"Documentation" = "https://docs.atlys.io"
-"Source Code" = "https://github.com/atlys/atlys"
